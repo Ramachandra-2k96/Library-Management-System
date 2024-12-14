@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="rounded-full bg-indigo-500 p-8">
+                    <span class="text-3xl text-white">{{ user_profile.user.username|make_list|first|upper }}</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ user_profile.user.username }}</h1>
+                    <p class="text-gray-600">{{ user_profile.user.email }}</p>
+                    <span class="inline-block px-3 py-1 mt-2 text-sm font-semibold text-indigo-700 bg-indigo-100 rounded-full">
+                        {{ user_profile.user_type|title }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            {% if user_profile.user_type == 'author' %}
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-900">My Books</h2>
+                    <a href="{% url 'add_book' %}" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors">
+                        Add New Book
+                    </a>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for book in books %}
+                    <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <img src="{{ book.image.url }}" alt="{{ book.title }}" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900">{{ book.title }}</h3>
+                            <p class="text-gray-600 mt-2 line-clamp-3">{{ book.description }}</p>
+                            <div class="mt-4 flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Added {{ book.created_at|date }}</span>
+                                <a href="{% url 'edit_book' book.id %}" class="text-indigo-500 hover:text-indigo-600">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-600 col-span-full text-center py-8">You haven't added any books yet.</p>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Borrowed Books</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for borrowed in borrowed_books %}
+                    <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <img src="{{ borrowed.book.image.url }}" alt="{{ borrowed.book.title }}" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900">{{ borrowed.book.title }}</h3>
+                            <p class="text-gray-600 mt-2">By {{ borrowed.book.author.username }}</p>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">Borrowed on {{ borrowed.borrowed_date|date }}</p>
+                                <button class="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors w-full"
+                                        onclick="returnBook({{ borrowed.id }})">
+                                    Return Book
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-600 col-span-full text-center py-8">You haven't borrowed any books yet.</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

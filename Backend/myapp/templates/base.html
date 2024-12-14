@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-indigo-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="{% url 'home' %}" class="text-white font-bold">
+                        Digital Library
+                    </a>
+                    <a href="{% url 'book_list' %}" class="text-white hover:text-indigo-100">
+                        Browse Books
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <span class="text-white px-3 py-1 rounded-full {% if user.userprofile.user_type == 'author' %}bg-green-500{% else %}bg-blue-500{% endif %}">
+                            {{ user.userprofile.user_type|title }}
+                        </span>
+                        <a href="{% url 'profile' %}" class="text-white hover:text-indigo-100">Profile</a>
+                        <a href="{% url 'logout' %}" class="text-white hover:text-indigo-100">Logout</a>
+                    {% else %}
+                        <span class="text-white px-3 py-1 rounded-full bg-gray-500">Guest</span>
+                        <a href="{% url 'login' %}" class="text-white hover:text-indigo-100">Login</a>
+                        <a href="{% url 'signup' %}" class="text-white hover:text-indigo-100">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="fixed top-4 right-4 z-50">
+        {% for message in messages %}
+        <div class="animate__animated animate__fadeInRight mb-4 p-4 rounded-lg shadow-lg {% if message.tags == 'error' %}bg-red-500{% else %}bg-green-500{% endif %} text-white">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html> 
