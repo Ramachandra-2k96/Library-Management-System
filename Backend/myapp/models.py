@@ -18,13 +18,20 @@ class UserProfile(models.Model):
 class Book(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    image = models.ImageField(upload_to='bookimages/')
+    image = models.ImageField(upload_to='bookimages/', blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='books')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    num_of_copies = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return self.title
+
+    def delete(self, *args, **kwargs):
+        # Delete the image file when the book is deleted
+        if self.image:
+            self.image.delete()
+        super().delete(*args, **kwargs)
 
 class BorrowedBook(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)

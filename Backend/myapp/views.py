@@ -4,15 +4,23 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
-from django.db import models
 from django.db.models.signals import post_save
-from django.dispatch import receiver
-from .models import UserProfile, Book, BorrowedBook
+from .models import Book, BorrowedBook
 from django.urls import reverse
 from django.http import HttpResponsePermanentRedirect
 from django.db.models import Q
+from django.utils import timezone
 
 def signup_view(request):
+    """
+    View for user signup.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -56,6 +64,15 @@ def signup_view(request):
     return render(request, 'signup.html')
 
 def login_view(request):
+    """
+    View for user login.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -91,6 +108,15 @@ def login_view(request):
 
 @login_required
 def profile_view(request):
+    """
+    View for user profile.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     user_profile = request.user.userprofile
     context = {
         'user_profile': user_profile,
@@ -111,11 +137,29 @@ def profile_view(request):
     return render(request, 'profile.html', context)
 
 def logout_view(request):
+    """
+    View for user logout.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return HttpResponsePermanentRedirect(reverse('login'))
 
 def book_list_view(request):
+    """
+    View for book list.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     query = request.GET.get('search', '')
     books = Book.objects.all().select_related('author').order_by('-created_at')
     
@@ -135,27 +179,87 @@ def book_list_view(request):
 
 @login_required
 def borrow_book(request, book_id):
+    """
+    View for borrowing a book.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        book_id (int): The ID of the book to borrow.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     if request.method == 'POST':
         try:
             book = Book.objects.get(id=book_id)
-            if not BorrowedBook.objects.filter(book=book, reader=request.user, is_returned=False).exists():
-                BorrowedBook.objects.create(
-                    book=book,
-                    reader=request.user
-                )
-                messages.success(request, f'Successfully borrowed "{book.title}"')
-            else:
+            # Check if user has already borrowed this book
+            if BorrowedBook.objects.filter(book=book, reader=request.user, is_returned=False).exists():
                 messages.error(request, 'You have already borrowed this book')
+                return redirect('book_list')
+            
+            # Check if copies are available
+            if book.num_of_copies <= 0:
+                messages.error(request, 'No copies available for borrowing')
+                return redirect('book_list')
+            
+            # Create borrow record and decrease number of copies
+            BorrowedBook.objects.create(
+                book=book,
+                reader=request.user
+            )
+            book.num_of_copies -= 1
+            book.save()
+            messages.success(request, f'Successfully borrowed "{book.title}"')
+            
         except Book.DoesNotExist:
             messages.error(request, 'Book not found')
     return redirect('book_list')
 
 @login_required
+def return_book(request, borrowed_id):
+    """
+    View for returning a borrowed book.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        borrowed_id (int): The ID of the borrowed book to return.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
+    if request.method == 'POST':
+        try:
+            borrowed = BorrowedBook.objects.get(id=borrowed_id, reader=request.user, is_returned=False)
+            borrowed.is_returned = True
+            borrowed.return_date = timezone.now()
+            borrowed.save()
+            
+            # Increase the number of copies
+            book = borrowed.book
+            book.num_of_copies += 1
+            book.save()
+            
+            messages.success(request, f'Successfully returned "{book.title}"')
+        except BorrowedBook.DoesNotExist:
+            messages.error(request, 'Borrowed book record not found')
+    return redirect('profile')
+
+@login_required
 def add_book(request):
+    """
+    View for adding a book.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
         image = request.FILES.get('image')
+        num_of_copies = request.POST.get('num_of_copies', 1)
         
         if title and description and image:
             try:
@@ -163,7 +267,8 @@ def add_book(request):
                     title=title,
                     description=description,
                     image=image,
-                    author=request.user
+                    author=request.user,
+                    num_of_copies=num_of_copies
                 )
                 messages.success(request, f'Successfully added book "{title}"')
                 return redirect('book_list')
@@ -176,6 +281,16 @@ def add_book(request):
 
 @login_required
 def edit_book(request, book_id):
+    """
+    View for editing a book.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        book_id (int): The ID of the book to edit.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     try:
         book = Book.objects.get(id=book_id)
         
@@ -187,10 +302,12 @@ def edit_book(request, book_id):
             title = request.POST.get('title')
             description = request.POST.get('description')
             image = request.FILES.get('image')
+            num_of_copies = request.POST.get('num_of_copies', book.num_of_copies)
             
             if title and description:
                 book.title = title
                 book.description = description
+                book.num_of_copies = num_of_copies
                 if image:
                     book.image = image
                 book.save()
@@ -210,6 +327,16 @@ def edit_book(request, book_id):
 
 @login_required
 def delete_book(request, book_id):
+    """
+    View for deleting a book.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        book_id (int): The ID of the book to delete.
+
+    Returns:
+        HttpResponse: The HTTP response object.
+    """
     try:
         book = Book.objects.get(id=book_id)
         

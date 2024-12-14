@@ -3,19 +3,20 @@
 {% block content %}
 <div class="min-h-screen bg-gray-100">
     <!-- Search Bar -->
-    <div class="bg-white shadow-md">
+    <div class="bg-white shadow-md sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <form method="GET" action="{% url 'book_list' %}" class="flex gap-4">
+            <div class="flex gap-4">
                 <input type="text" 
+                       id="searchInput"
                        name="search" 
                        value="{{ query }}"
                        placeholder="Search for books..." 
                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                <button type="submit" 
-                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                    Search
+                <button onclick="clearSearch()" 
+                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    Clear
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -30,9 +31,12 @@
         </div>
         {% endif %}
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div id="booksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for book in books %}
-            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div class="book-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow" 
+                 data-title="{{ book.title|lower }}" 
+                 data-author="{{ book.author.username|lower }}" 
+                 data-description="{{ book.description|lower }}">
                 <img src="{{ book.image.url }}" 
                      alt="{{ book.title }}" 
                      class="w-full h-48 object-cover">
@@ -43,25 +47,94 @@
                         <div>
                             <p class="text-sm text-gray-500">By {{ book.author.username }}</p>
                             <p class="text-xs text-gray-400">Added {{ book.created_at|date }}</p>
+                            <p class="text-sm {% if book.num_of_copies > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ book.num_of_copies }} cop{{ book.num_of_copies|pluralize:"y,ies" }} available
+                            </p>
                         </div>
                         {% if user.is_authenticated and user.userprofile.user_type == 'reader' %}
-                        <form method="POST" action="{% url 'borrow_book' book.id %}">
-                            {% csrf_token %}
-                            <button type="submit" 
-                                    class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
-                                Borrow
-                            </button>
-                        </form>
+                            {% if book.num_of_copies > 0 %}
+                                <form method="POST" action="{% url 'borrow_book' book.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
+                                        Borrow
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="px-4 py-2 bg-gray-400 text-white text-sm rounded-lg">
+                                    Out of Stock
+                                </span>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
             </div>
             {% empty %}
             <div class="col-span-full text-center py-12">
-                <p class="text-gray-600">No books found matching your search.</p>
+                <p class="text-gray-600">No books found.</p>
             </div>
             {% endfor %}
         </div>
+
+        <!-- No Results Message -->
+        <div id="noResults" class="hidden text-center py-12">
+            <p class="text-gray-600">No books found matching your search.</p>
+        </div>
     </div>
 </div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const booksGrid = document.getElementById('booksGrid');
+    const noResults = document.getElementById('noResults');
+    const bookCards = document.querySelectorAll('.book-card');
+    let debounceTimer;
+
+    function performSearch() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        let hasResults = false;
+
+        bookCards.forEach(card => {
+            const title = card.dataset.title;
+            const author = card.dataset.author;
+            const description = card.dataset.description;
+            
+            if (title.includes(searchTerm) || 
+                author.includes(searchTerm) || 
+                description.includes(searchTerm)) {
+                card.classList.remove('hidden');
+                hasResults = true;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        // Show/hide no results message
+        if (hasResults) {
+            noResults.classList.add('hidden');
+            booksGrid.classList.remove('hidden');
+        } else {
+            noResults.classList.remove('hidden');
+            booksGrid.classList.add('hidden');
+        }
+    }
+
+    function debounceSearch() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(performSearch, 300); // Wait 300ms after user stops typing
+    }
+
+    function clearSearch() {
+        searchInput.value = '';
+        performSearch();
+    }
+
+    // Add event listeners
+    searchInput.addEventListener('input', debounceSearch);
+
+    // Initial search if there's a value
+    if (searchInput.value) {
+        performSearch();
+    }
+</script>
 {% endblock %} 

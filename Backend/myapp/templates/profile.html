@@ -38,7 +38,10 @@
                             <p class="text-gray-600 mt-2 line-clamp-3">{{ book.description }}</p>
                             <div class="mt-4 flex justify-between items-center">
                                 <span class="text-sm text-gray-500">Added {{ book.created_at|date }}</span>
-                                <a href="{% url 'edit_book' book.id %}" class="text-indigo-500 hover:text-indigo-600">Edit</a>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-600">{{ book.num_of_copies }} cop{{ book.num_of_copies|pluralize:"y,ies" }}</span>
+                                    <a href="{% url 'edit_book' book.id %}" class="text-indigo-500 hover:text-indigo-600">Edit</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -60,10 +63,12 @@
                             <p class="text-gray-600 mt-2">By {{ borrowed.book.author.username }}</p>
                             <div class="mt-4">
                                 <p class="text-sm text-gray-500">Borrowed on {{ borrowed.borrowed_date|date }}</p>
-                                <button class="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors w-full"
-                                        onclick="returnBook({{ borrowed.id }})">
-                                    Return Book
-                                </button>
+                                <form method="POST" action="{% url 'return_book' borrowed.id %}">
+                                    {% csrf_token %}
+                                    <button class="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors w-full">
+                                        Return Book
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
