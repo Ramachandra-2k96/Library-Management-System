@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 animate__animated animate__fadeIn">
     <!-- Search Bar -->
-    <div class="bg-white shadow-md sticky top-0 z-10">
+    <div class="glass-nav sticky top-20 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex gap-4">
                 <input type="text" 
@@ -11,9 +11,9 @@
                        name="search" 
                        value="{{ query }}"
                        placeholder="Search for books..." 
-                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                       class="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white transform hover:scale-102 transition-all duration-300">
                 <button onclick="clearSearch()" 
-                        class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                        class="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
                     Clear
                 </button>
             </div>
@@ -23,9 +23,9 @@
     <!-- Books Grid -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% if user.is_authenticated and user.userprofile.user_type == 'author' %}
-        <div class="mb-6 flex justify-end">
+        <div class="mb-6 flex justify-end animate__animated animate__fadeInRight">
             <a href="{% url 'add_book' %}" 
-               class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+               class="px-6 py-2 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
                 Add New Book
             </a>
         </div>
@@ -33,21 +33,21 @@
 
         <div id="booksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for book in books %}
-            <div class="book-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow" 
+            <div class="book-card bg-gray-800 rounded-2xl shadow-2xl overflow-hidden hover:shadow-blue-500/20 transition-all duration-500 transform hover:scale-105 animate__animated animate__fadeInUp" 
                  data-title="{{ book.title|lower }}" 
                  data-author="{{ book.author.username|lower }}" 
                  data-description="{{ book.description|lower }}">
                 <img src="{{ book.image.url }}" 
                      alt="{{ book.title }}" 
-                     class="w-full h-48 object-cover">
-                <div class="p-4">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ book.title }}</h3>
-                    <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ book.description }}</p>
+                     class="w-full h-48 object-cover hover:opacity-80 transition-opacity">
+                <div class="p-6 backdrop-blur-lg border-t border-gray-700">
+                    <h3 class="text-lg font-bold gradient-text mb-2">{{ book.title }}</h3>
+                    <p class="text-sm text-gray-300 mb-4 line-clamp-3">{{ book.description }}</p>
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500">By {{ book.author.username }}</p>
+                            <p class="text-sm text-blue-300">By {{ book.author.username }}</p>
                             <p class="text-xs text-gray-400">Added {{ book.created_at|date }}</p>
-                            <p class="text-sm {% if book.num_of_copies > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            <p class="text-sm mt-2 badge {% if book.num_of_copies > 0 %}bg-gradient-to-r from-emerald-400 to-teal-500{% else %}bg-gradient-to-r from-red-500 to-pink-500{% endif %}">
                                 {{ book.num_of_copies }} cop{{ book.num_of_copies|pluralize:"y,ies" }} available
                             </p>
                         </div>
@@ -56,12 +56,12 @@
                                 <form method="POST" action="{% url 'borrow_book' book.id %}">
                                     {% csrf_token %}
                                     <button type="submit" 
-                                            class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-colors">
+                                            class="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
                                         Borrow
                                     </button>
                                 </form>
                             {% else %}
-                                <span class="px-4 py-2 bg-gray-400 text-white text-sm rounded-lg">
+                                <span class="px-6 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg">
                                     Out of Stock
                                 </span>
                             {% endif %}
@@ -70,15 +70,15 @@
                 </div>
             </div>
             {% empty %}
-            <div class="col-span-full text-center py-12">
-                <p class="text-gray-600">No books found.</p>
+            <div class="col-span-full text-center py-12 animate__animated animate__fadeIn">
+                <p class="text-gray-300 text-lg">No books found.</p>
             </div>
             {% endfor %}
         </div>
 
         <!-- No Results Message -->
-        <div id="noResults" class="hidden text-center py-12">
-            <p class="text-gray-600">No books found matching your search.</p>
+        <div id="noResults" class="hidden text-center py-12 animate__animated animate__fadeIn">
+            <p class="text-gray-300 text-lg">No books found matching your search.</p>
         </div>
     </div>
 </div>
@@ -89,6 +89,15 @@
     const noResults = document.getElementById('noResults');
     const bookCards = document.querySelectorAll('.book-card');
     let debounceTimer;
+
+    // Enhanced animations on page load
+    gsap.from('.book-card', {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: 'back.out(1.2)'
+    });
 
     function performSearch() {
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -102,26 +111,48 @@
             if (title.includes(searchTerm) || 
                 author.includes(searchTerm) || 
                 description.includes(searchTerm)) {
-                card.classList.remove('hidden');
+                card.style.display = 'block';
+                gsap.to(card, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.5,
+                    ease: 'back.out(1.2)'
+                });
                 hasResults = true;
             } else {
-                card.classList.add('hidden');
+                gsap.to(card, {
+                    opacity: 0,
+                    y: 20,
+                    duration: 0.3,
+                    onComplete: () => card.style.display = 'none'
+                });
             }
         });
 
-        // Show/hide no results message
+        // Show/hide no results message with animation
         if (hasResults) {
-            noResults.classList.add('hidden');
-            booksGrid.classList.remove('hidden');
+            gsap.to(noResults, {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    noResults.classList.add('hidden');
+                    booksGrid.classList.remove('hidden');
+                }
+            });
         } else {
-            noResults.classList.remove('hidden');
             booksGrid.classList.add('hidden');
+            noResults.classList.remove('hidden');
+            gsap.from(noResults, {
+                opacity: 0,
+                y: -20,
+                duration: 0.5
+            });
         }
     }
 
     function debounceSearch() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(performSearch, 300); // Wait 300ms after user stops typing
+        debounceTimer = setTimeout(performSearch, 300);
     }
 
     function clearSearch() {
@@ -137,4 +168,4 @@
         performSearch();
     }
 </script>
-{% endblock %} 
+{% endblock %}
