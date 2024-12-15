@@ -109,8 +109,9 @@ Visit `http://localhost:8000` to see the application in action!
 - **Animations**: GSAP, Animate.css
 - **Icons**: Heroicons
 
-## Testing vedio
-![Testing vedio](0000-2078.mp4)
+## Testing Video
+[Testing Video](https://github.com/Ramachandra-2k96/Library-Management-System/blob/main/0000-2078.mp4)
+
 
 ## 📝 Project Structure
 ```
