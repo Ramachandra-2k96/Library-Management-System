@@ -11,10 +11,18 @@ class UserProfile(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     user_type = models.CharField(max_length=20, choices=USER_TYPES, default='reader')
+    bio = models.TextField(max_length=500, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     
     def __str__(self):
         return f"{self.user.username}'s profile"
     
+    def delete(self, *args, **kwargs):
+        # Delete the profile picture if it exists
+        if self.profile_picture:
+            self.profile_picture.delete()
+        super().delete(*args, **kwargs)
+
 class Book(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -28,7 +36,7 @@ class Book(models.Model):
         return self.title
 
     def delete(self, *args, **kwargs):
-        # Delete the image file when the book is deleted
+        # Delete the book image if it exists
         if self.image:
             self.image.delete()
         super().delete(*args, **kwargs)

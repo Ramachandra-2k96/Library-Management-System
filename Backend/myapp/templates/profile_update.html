@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gray-800/50 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-gray-700/50 animate__animated animate__fadeInDown">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-white">Update Profile</h2>
+                <p class="text-blue-300 mt-2">Update your profile information</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
+                    <input type="text" 
+                           name="username" 
+                           id="username" 
+                           value="{{ user.username }}"
+                           required 
+                           class="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-300">Email</label>
+                    <input type="email" 
+                           name="email" 
+                           id="email" 
+                           value="{{ user.email }}"
+                           required 
+                           class="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label for="bio" class="block text-sm font-medium text-gray-300">Bio</label>
+                    <textarea name="bio" 
+                              id="bio" 
+                              rows="4" 
+                              class="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">{{ user_profile.bio }}</textarea>
+                </div>
+
+                <!-- Profile Picture -->
+                <div>
+                    <label for="profile_picture" class="block text-sm font-medium text-gray-300">Profile Picture</label>
+                    {% if user_profile.profile_picture %}
+                    <div class="mt-2 flex items-center space-x-4">
+                        <img src="{{ user_profile.profile_picture.url }}" 
+                             alt="Current profile picture" 
+                             class="h-20 w-20 rounded-full object-cover border-2 border-blue-500">
+                        <p class="text-sm text-gray-400">Current profile picture</p>
+                    </div>
+                    {% endif %}
+                    <input type="file" 
+                           name="profile_picture" 
+                           id="profile_picture" 
+                           accept="image/*"
+                           class="mt-2 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">
+                    <p class="mt-1 text-sm text-gray-400">Leave empty to keep current picture</p>
+                </div>
+
+                <!-- Change Password Section -->
+                <div class="pt-6 border-t border-gray-700">
+                    <h3 class="text-xl font-semibold text-white mb-4">Change Password</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="current_password" class="block text-sm font-medium text-gray-300">Current Password</label>
+                            <input type="password" 
+                                   name="current_password" 
+                                   id="current_password" 
+                                   class="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">
+                        </div>
+                        <div>
+                            <label for="new_password" class="block text-sm font-medium text-gray-300">New Password</label>
+                            <input type="password" 
+                                   name="new_password" 
+                                   id="new_password" 
+                                   class="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">
+                        </div>
+                        <div>
+                            <label for="confirm_password" class="block text-sm font-medium text-gray-300">Confirm New Password</label>
+                            <input type="password" 
+                                   name="confirm_password" 
+                                   id="confirm_password" 
+                                   class="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end space-x-4 pt-6">
+                    <a href="{% url 'profile' %}" 
+                       class="px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-all duration-300 transform hover:scale-105">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl transition-all duration-300 transform hover:scale-105">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="mt-12 border-t border-gray-700 pt-8">
+    <div class="flex flex-col items-start">
+        <h3 class="text-xl font-semibold text-red-500 mb-2">Danger Zone</h3>
+        <p class="text-gray-400 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+        <button onclick="showDeleteModal()" 
+                class="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl transform hover:scale-105 transition-all duration-300 shadow-lg">
+            Delete Account
+        </button>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="deleteModal" 
+     class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 animate__animated animate__fadeInDown">
+        <h3 class="text-2xl font-bold text-white mb-4">Delete Account</h3>
+        <p class="text-gray-300 mb-6">
+            Are you sure you want to delete your account? This action cannot be undone and will:
+        </p>
+        <ul class="list-disc list-inside text-gray-300 mb-6 space-y-2">
+            <li>Delete all your personal information</li>
+            {% if user.userprofile.user_type == 'author' %}
+                <li>Remove all books you've published</li>
+            {% else %}
+                <li>Cancel all your current book borrowings</li>
+            {% endif %}
+            <li>Permanently delete your profile</li>
+        </ul>
+        <div class="flex justify-end space-x-4">
+            <button onclick="hideDeleteModal()" 
+                    class="px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-all duration-300">
+                Cancel
+            </button>
+            <form method="POST" action="{% url 'delete_account' %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl transform hover:scale-105 transition-all duration-300">
+                    Delete Account
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        // Restore body scroll
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideDeleteModal();
+        }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideDeleteModal();
+        }
+    });
+</script>
+{% endblock %} 

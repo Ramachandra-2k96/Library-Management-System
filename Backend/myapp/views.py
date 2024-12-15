@@ -136,6 +136,80 @@ def profile_view(request):
 
     return render(request, 'profile.html', context)
 
+@login_required
+def profile_update_view(request):
+    """
+    View for updating user profile information.
+    """
+    if request.method == 'POST':
+        user = request.user
+        profile = user.userprofile
+
+        # Update basic info
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        bio = request.POST.get('bio')
+        profile_picture = request.FILES.get('profile_picture')
+
+        # Validate username and email
+        if username != user.username and User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists!')
+            return redirect('profile_update')
+
+        if email != user.email and User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered!')
+            return redirect('profile_update')
+
+        # Update user info
+        user.username = username
+        user.email = email
+        profile.bio = bio
+        if profile_picture:
+            # Delete old profile picture if it exists
+            if profile.profile_picture:
+                profile.profile_picture.delete()
+            profile.profile_picture = profile_picture
+
+        # Handle password change
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if current_password and new_password and confirm_password:
+            # Verify current password
+            if not user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect!')
+                return redirect('profile_update')
+            
+            # Validate new password
+            if new_password != confirm_password:
+                messages.error(request, 'New passwords do not match!')
+                return redirect('profile_update')
+            
+            # Set new password
+            user.set_password(new_password)
+            messages.success(request, 'Password updated successfully!')
+
+        try:
+            user.save()
+            profile.save()
+            messages.success(request, 'Profile updated successfully!')
+            
+            # If password was changed, need to log in again
+            if current_password and new_password:
+                return redirect('login')
+                
+            return redirect('profile')
+            
+        except Exception as e:
+            messages.error(request, f'Error updating profile: {str(e)}')
+            return redirect('profile_update')
+
+    context = {
+        'user_profile': request.user.userprofile
+    }
+    return render(request, 'profile_update.html', context)
+
 def logout_view(request):
     """
     View for user logout.
@@ -355,3 +429,19 @@ def delete_book(request, book_id):
     except Book.DoesNotExist:
         messages.error(request, 'Book not found')
         return redirect('book_list')
+
+@login_required
+def delete_account(request):
+    if request.method == 'POST':
+        user = request.user
+        try:
+            # This will trigger the delete cascade for all related objects
+            # including UserProfile, Books (for authors), BorrowedBooks, etc.
+            user.delete()
+            messages.success(request, 'Your account has been successfully deleted.')
+            return redirect('home')
+        except Exception as e:
+            messages.error(request, f'Error deleting account: {str(e)}')
+            return redirect('profile')
+    
+    return redirect('profile')
